@@ -2,7 +2,7 @@
 swda*
 swb_ms98_transcriptions*
 switchboard_word_alignments*
-
+aligned/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

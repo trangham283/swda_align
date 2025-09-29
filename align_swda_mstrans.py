@@ -48,10 +48,12 @@ def clean_text(text):
     # remove disfluency markers
     # see https://github.com/cgpotts/swda/blob/master/swda.py#L351
     text = re.sub(r"([+/\}\[\]]|\{\w)", "", text)
-    # remove punctuation except -', convert to lowercase
-    text = re.sub(r"[^\w\s'-]", "", text.lower())
+    # remove punctuation except -'<>, convert to lowercase
+    text = re.sub(r"[^\<\>\w\s'-]", "", text.lower())
     # replace multiple whitespace with single space and strip
     text = re.sub(r"\s+", " ", text).strip()
+    # turn tokens like <laughter> to [laughter] for matching with MS transcripts
+    text = text.replace("<", "[").replace(">", "]")
     return text
 
 
@@ -77,17 +79,54 @@ def unroll_words(df_side):
 # claude-generated
 def align_sequences(seq1, seq2):
     """
-    Align two sequences using difflib.SequenceMatcher
+    Align two sequences using difflib.SequenceMatcher with relaxed word matching
     seq1: list of words from SWDA
     seq2: list of words from transcript
     Returns: list of tuples (word1, word2, alignment_type)
     """
-    matcher = SequenceMatcher(None, seq1, seq2)
+
+    # Create normalized versions for alignment
+    def normalize_word(word):
+        """Normalize words to canonical form for better alignment"""
+        if not word:
+            return word
+
+        word_lower = word.lower()
+
+        # Map variations to canonical forms
+        canonical_map = {
+            "um-hum": "uh-huh",
+            "uh-hum": "uh-huh",
+            "uhuh": "uh-huh",
+            "umhum": "uh-huh",
+            "mm-hmm": "mm-hm",
+            "mhm": "mm-hm",
+            "mmhm": "mm-hm",
+            "uhoh": "uh-oh",
+            "oh-oh": "uh-oh",
+            "ok": "okay",
+            "kay": "okay",
+            "yah": "yeah",
+            "ya": "yeah",
+            "nah": "no",
+            "nuh-uh": "no",
+            "hm": "hmm",
+            "huh": "hmm",
+        }
+
+        return canonical_map.get(word_lower, word_lower)
+
+    # Create normalized sequences for alignment
+    norm_seq1 = [normalize_word(w) for w in seq1]
+    norm_seq2 = [normalize_word(w) for w in seq2]
+
+    # Use SequenceMatcher on normalized sequences
+    matcher = SequenceMatcher(None, norm_seq1, norm_seq2)
     alignment = []
 
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
         if tag == "equal":
-            # Match
+            # Match (use original words in output)
             for k in range(i2 - i1):
                 alignment.append((seq1[i1 + k], seq2[j1 + k], "match"))
         elif tag == "replace":
@@ -97,7 +136,11 @@ def align_sequences(seq1, seq2):
                 word1 = seq1[i1 + k] if k < len1 else None
                 word2 = seq2[j1 + k] if k < len2 else None
                 if word1 and word2:
-                    alignment.append((word1, word2, "mismatch"))
+                    # Check if normalized versions match
+                    if normalize_word(word1) == normalize_word(word2):
+                        alignment.append((word1, word2, "match"))
+                    else:
+                        alignment.append((word1, word2, "mismatch"))
                 elif word1:
                     alignment.append((word1, None, "deletion"))
                 else:
@@ -142,8 +185,8 @@ def create_aligned_dataframe(swda_words, trans_df, speaker):
             swda_row = swda_words.iloc[swda_idx]
             row.update(
                 {
-                    "utterance_index": swda_row["utterance_index"],
-                    "subutterance_index": swda_row["subutterance_index"],
+                    "utterance_index": int(swda_row["utterance_index"]),
+                    "subutterance_index": int(swda_row["subutterance_index"]),
                     "act_tag": swda_row["act_tag"],
                 }
             )
@@ -237,6 +280,88 @@ def get_transcript_conversations(trans_dir="swb_ms98_transcriptions"):
     return trans_convs
 
 
+def is_poor_alignment(alignment_df):
+    """Return True if alignment is poor (matches < 50% of total)"""
+    total_alignments = len(alignment_df)
+    if total_alignments == 0:
+        return True
+
+    alignment_counts = alignment_df["alignment_type"].value_counts()
+    matches = alignment_counts.get("match", 0)
+
+    return matches < (total_alignments / 2)
+
+
+def align_with_speaker_detection(swda_df, dfA, dfB):
+    """
+    Perform alignment with automatic speaker flip detection
+    Returns: (aligned_dataframe, flip_info)
+    """
+    # Process SWDA data once
+    swda_df["text_norm"] = swda_df["text"].apply(clean_text)
+    swda_A = swda_df[swda_df.caller == "A"]
+    swda_B = swda_df[swda_df.caller == "B"]
+
+    # Unroll words once per speaker
+    swda_words_A = unroll_words(swda_A) if len(swda_A) > 0 else pd.DataFrame()
+    swda_words_B = unroll_words(swda_B) if len(swda_B) > 0 else pd.DataFrame()
+
+    # Try normal alignment (A->A, B->B)
+    normal_A = (
+        create_aligned_dataframe(swda_words_A, dfA, "A")
+        if len(swda_words_A) > 0 and len(dfA) > 0
+        else pd.DataFrame()
+    )
+    normal_B = (
+        create_aligned_dataframe(swda_words_B, dfB, "B")
+        if len(swda_words_B) > 0 and len(dfB) > 0
+        else pd.DataFrame()
+    )
+
+    # Try flipped alignment (A->B, B->A) with correct transcript speaker labels
+    flipped_A = (
+        create_aligned_dataframe(swda_words_A, dfB, "B")
+        if len(swda_words_A) > 0 and len(dfB) > 0
+        else pd.DataFrame()
+    )
+    flipped_B = (
+        create_aligned_dataframe(swda_words_B, dfA, "A")
+        if len(swda_words_B) > 0 and len(dfA) > 0
+        else pd.DataFrame()
+    )
+
+    # Check alignment quality
+    normal_combined = pd.concat([normal_A, normal_B])
+    flipped_combined = pd.concat([flipped_A, flipped_B])
+
+    normal_is_poor = is_poor_alignment(normal_combined)
+    flipped_is_poor = is_poor_alignment(flipped_combined)
+
+    # Use flipped if normal is poor and flipped is better
+    speakers_flipped = normal_is_poor and not flipped_is_poor
+
+    if speakers_flipped:
+        aligned_conv = (
+            flipped_combined  # .sort_values(["start", "utterance_index"]).reset_index(
+        )
+        #    drop=True
+        # )
+    else:
+        aligned_conv = (
+            normal_combined  # .sort_values(["start", "utterance_index"]).reset_index(
+        )
+        #    drop=True
+        # )
+
+    flip_info = {
+        "speakers_flipped": speakers_flipped,
+        "normal_is_poor": normal_is_poor,
+        "flipped_is_poor": flipped_is_poor,
+    }
+
+    return aligned_conv, flip_info
+
+
 def process_conversation(conv_num, conv2csv, trans_dir="swb_ms98_transcriptions"):
     """Process a single conversation and return aligned dataframe"""
     # Find subdirectory for this conversation
@@ -274,23 +399,11 @@ def process_conversation(conv_num, conv2csv, trans_dir="swb_ms98_transcriptions"
         print(f"Warning: Could not find SWDA file for conversation {conv_num}")
         return None
 
-    # Process SWDA data
-    swda_df["text_norm"] = swda_df["text"].apply(clean_text)
-    swda_A = swda_df[swda_df.caller == "A"]
-    swda_B = swda_df[swda_df.caller == "B"]
-    swda_words_A = unroll_words(swda_A)
-    swda_words_B = unroll_words(swda_B)
+    # Perform alignment with speaker flip detection
+    aligned_conv, flip_info = align_with_speaker_detection(swda_df, dfA, dfB)
 
-    # Create aligned dataframes
-    aligned_A = create_aligned_dataframe(swda_words_A, dfA, "A")
-    aligned_B = create_aligned_dataframe(swda_words_B, dfB, "B")
-
-    # Combine both speakers
-    aligned_conv = (
-        pd.concat([aligned_A, aligned_B])
-        .sort_values(["start", "speaker"])
-        .reset_index(drop=True)
-    )
+    if flip_info["speakers_flipped"]:
+        print(f"  -> Speakers flipped for conversation: {conv_num}")
 
     return aligned_conv
 
@@ -307,6 +420,9 @@ def main():
 
     # Process conversations that have both SWDA and transcript data
     processed_count = 0
+    flip_count = 0
+
+    print(f"\nProcessing conversations with speaker flip detection...")
     for conv_num in trans_convs:
         if conv_num not in conv2csv:
             continue
@@ -314,13 +430,12 @@ def main():
         aligned_conv = process_conversation(conv_num, conv2csv)
         if aligned_conv is not None:
             processed_count += 1
-            print(
-                f"Processed conversation {conv_num}: {len(aligned_conv)} aligned words"
-            )
-            # Uncomment to save individual conversation files
-            # aligned_conv.to_csv(f'aligned_conv_{conv_num}.csv', index=False)
+            # print(f"{len(aligned_conv)} aligned words")
+            aligned_conv.to_csv(f"aligned/aligned_conv_{conv_num}.csv", index=False)
+        else:
+            print(f"Failed processing {conv_num}")
 
-    print(f"Successfully processed {processed_count} conversations")
+    print(f"\nSuccessfully processed {processed_count} conversations")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,93 @@
+Loading SWDA conversation mapping...
+Found 1155 SWDA conversations
+Getting transcript conversations...
+Found 2438 transcript conversations
+
+Processing conversations with speaker flip detection...
+  -> Speakers flipped for conversation: 2616
+  -> Speakers flipped for conversation: 2631
+  -> Speakers flipped for conversation: 2627
+  -> Speakers flipped for conversation: 2617
+  -> Speakers flipped for conversation: 2658
+  -> Speakers flipped for conversation: 2684
+  -> Speakers flipped for conversation: 2963
+  -> Speakers flipped for conversation: 2955
+  -> Speakers flipped for conversation: 2954
+  -> Speakers flipped for conversation: 2994
+  -> Speakers flipped for conversation: 2932
+  -> Speakers flipped for conversation: 2981
+  -> Speakers flipped for conversation: 2968
+  -> Speakers flipped for conversation: 2913
+  -> Speakers flipped for conversation: 2930
+  -> Speakers flipped for conversation: 2970
+  -> Speakers flipped for conversation: 2999
+  -> Speakers flipped for conversation: 2983
+  -> Speakers flipped for conversation: 2960
+  -> Speakers flipped for conversation: 2305
+  -> Speakers flipped for conversation: 2372
+  -> Speakers flipped for conversation: 2303
+  -> Speakers flipped for conversation: 2339
+  -> Speakers flipped for conversation: 2366
+  -> Speakers flipped for conversation: 3050
+  -> Speakers flipped for conversation: 3012
+  -> Speakers flipped for conversation: 3018
+  -> Speakers flipped for conversation: 3077
+  -> Speakers flipped for conversation: 3000
+  -> Speakers flipped for conversation: 3096
+  -> Speakers flipped for conversation: 3013
+  -> Speakers flipped for conversation: 3039
+  -> Speakers flipped for conversation: 3088
+  -> Speakers flipped for conversation: 3040
+  -> Speakers flipped for conversation: 3061
+  -> Speakers flipped for conversation: 2006
+  -> Speakers flipped for conversation: 2072
+  -> Speakers flipped for conversation: 2027
+  -> Speakers flipped for conversation: 2073
+  -> Speakers flipped for conversation: 2010
+  -> Speakers flipped for conversation: 2064
+  -> Speakers flipped for conversation: 2854
+  -> Speakers flipped for conversation: 2844
+  -> Speakers flipped for conversation: 2858
+  -> Speakers flipped for conversation: 2485
+  -> Speakers flipped for conversation: 2476
+  -> Speakers flipped for conversation: 2405
+  -> Speakers flipped for conversation: 2514
+  -> Speakers flipped for conversation: 2501
+  -> Speakers flipped for conversation: 2539
+  -> Speakers flipped for conversation: 2593
+  -> Speakers flipped for conversation: 2521
+  -> Speakers flipped for conversation: 2533
+  -> Speakers flipped for conversation: 2576
+  -> Speakers flipped for conversation: 2566
+  -> Speakers flipped for conversation: 2543
+  -> Speakers flipped for conversation: 2527
+  -> Speakers flipped for conversation: 2247
+  -> Speakers flipped for conversation: 2235
+  -> Speakers flipped for conversation: 2290
+  -> Speakers flipped for conversation: 2262
+  -> Speakers flipped for conversation: 2292
+  -> Speakers flipped for conversation: 2279
+  -> Speakers flipped for conversation: 3405
+  -> Speakers flipped for conversation: 3142
+  -> Speakers flipped for conversation: 3130
+  -> Speakers flipped for conversation: 3143
+  -> Speakers flipped for conversation: 3146
+  -> Speakers flipped for conversation: 3140
+  -> Speakers flipped for conversation: 3144
+  -> Speakers flipped for conversation: 3136
+  -> Speakers flipped for conversation: 3148
+  -> Speakers flipped for conversation: 3131
+  -> Speakers flipped for conversation: 3154
+  -> Speakers flipped for conversation: 3129
+  -> Speakers flipped for conversation: 3138
+  -> Speakers flipped for conversation: 2171
+  -> Speakers flipped for conversation: 2110
+  -> Speakers flipped for conversation: 2130
+  -> Speakers flipped for conversation: 2177
+  -> Speakers flipped for conversation: 2707
+  -> Speakers flipped for conversation: 2792
+  -> Speakers flipped for conversation: 2794
+  -> Speakers flipped for conversation: 2789
+
+Successfully processed 1155 conversations
+
