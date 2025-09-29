@@ -91,3 +91,6 @@ Processing conversations with speaker flip detection...
 
 Successfully processed 1155 conversations
 
+==================================================
+
+Total processing time: ~4 minutes on a CPU Intel(R) Core(TM) Ultra 7 155U; Ubuntu 24.04.3 LTS
