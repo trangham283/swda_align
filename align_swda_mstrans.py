@@ -75,6 +75,37 @@ def unroll_words(df_side):
     return pd.DataFrame(list_row)
 
 
+# Map variations to canonical forms
+canonical_map = {
+    "um-hum": "uh-huh",
+    "uh-hum": "uh-huh",
+    "uhuh": "uh-huh",
+    "umhum": "uh-huh",
+    "mm-hmm": "mm-hm",
+    "mhm": "mm-hm",
+    "mmhm": "mm-hm",
+    "uhoh": "uh-oh",
+    "oh-oh": "uh-oh",
+    "ok": "okay",
+    "kay": "okay",
+    "yah": "yeah",
+    "ya": "yeah",
+    "nah": "no",
+    "hm": "hmm",
+    "huh": "hmm",
+}
+
+
+# create normalized versions for alignment
+def normalize_word(word):
+    """Normalize words to canonical form for better alignment"""
+    if not word:
+        return word
+
+    word_lower = word.lower()
+    return canonical_map.get(word_lower, word_lower)
+
+
 # sequence alignment function for word-level alignment
 # claude-generated
 def align_sequences(seq1, seq2):
@@ -84,38 +115,6 @@ def align_sequences(seq1, seq2):
     seq2: list of words from transcript
     Returns: list of tuples (word1, word2, alignment_type)
     """
-
-    # Create normalized versions for alignment
-    def normalize_word(word):
-        """Normalize words to canonical form for better alignment"""
-        if not word:
-            return word
-
-        word_lower = word.lower()
-
-        # Map variations to canonical forms
-        canonical_map = {
-            "um-hum": "uh-huh",
-            "uh-hum": "uh-huh",
-            "uhuh": "uh-huh",
-            "umhum": "uh-huh",
-            "mm-hmm": "mm-hm",
-            "mhm": "mm-hm",
-            "mmhm": "mm-hm",
-            "uhoh": "uh-oh",
-            "oh-oh": "uh-oh",
-            "ok": "okay",
-            "kay": "okay",
-            "yah": "yeah",
-            "ya": "yeah",
-            "nah": "no",
-            "nuh-uh": "no",
-            "hm": "hmm",
-            "huh": "hmm",
-        }
-
-        return canonical_map.get(word_lower, word_lower)
-
     # Create normalized sequences for alignment
     norm_seq1 = [normalize_word(w) for w in seq1]
     norm_seq2 = [normalize_word(w) for w in seq2]
