@@ -166,7 +166,50 @@ if dp_tuples != difflib_tuples:
 
 """
 Comparison results:
+Sequence 1 (SWDA): ['okay', 'uh', 'first', 'um', 'i', 'need', 'to', 'know']
+Sequence 2 (Transcript): ['okay', 'uh', 'first', 'i', 'need', 'know']
 
+============================================================
+
+Dynamic Programming Alignment:
+    okay | okay     | match
+      uh | uh       | match
+   first | first    | match
+      um | None     | deletion
+       i | i        | match
+    need | need     | match
+      to | None     | deletion
+    know | know     | match
+
+DP Time: 0.000022 seconds
+
+============================================================
+
+Difflib SequenceMatcher Alignment:
+    okay | okay     | match
+      uh | uh       | match
+   first | first    | match
+      um | None     | deletion
+       i | i        | match
+    need | need     | match
+      to | None     | deletion
+    know | know     | match
+
+Difflib Time: 0.000032 seconds
+
+============================================================
+PERFORMANCE COMPARISON ON LONGER SEQUENCES:
+Long sequence 1: 800 words
+Long sequence 2: 600 words
+
+DP Time (long): 0.093901 seconds
+Difflib Time (long): 0.000818 seconds
+Speed ratio (difflib/DP): 0.01x
+
+Alignment Results Match: True
+
+============================================================
+Conclusion
 Accuracy: Both methods produce identical alignments ✅
 
   Performance:
