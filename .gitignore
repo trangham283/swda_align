@@ -1,3 +1,9 @@
+# downloaded data
+swda/*
+swb_ms98_transcriptions*
+switchboard_word_alignments*
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
