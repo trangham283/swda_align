@@ -32,6 +32,9 @@ def fill_act_tag_by_turn(df):
             df.loc[i, "subutterance_index"] = df.loc[i - 1, "subutterance_index"]
 
     # Third pass: find nearest row with same turn_id for any remaining NaNs
+    # We don't do this before the first two passes because it is possible
+    # for turn_id to map to different (utterance_index, subutterance_index)s,
+    # which we prioritize matching because act_tags follow those indices
     for i in range(len(df)):
         if pd.isna(df.loc[i, "act_tag"]):
             current_turn_id = df.loc[i, "turn_id"]
