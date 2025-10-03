@@ -130,3 +130,5 @@ See [LICENSE](./LICENSE) file for details.
 - [Switchboard Dialog Act Corpus](https://github.com/cgpotts/swda)
 - [DAMSL Annotation Manual](https://web.stanford.edu/~jurafsky/ws97/manual.august1.html)
 - [Mississippi State Switchboard resegmentation project](https://isip.piconepress.com/projects/switchboard/)
+- [My old code](https://github.com/trangham283/joint_seg_da/blob/master/swda_utils/align_times.py) - a monstrosity that would probably cause most people to cringe, but it was surprisingly useful in giving me better, more focused ideas to prompt Claude with and reminding me of pitfalls I had run into previously.
+
