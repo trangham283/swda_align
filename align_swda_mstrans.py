@@ -395,13 +395,9 @@ def align_with_speaker_detection(swda_df, dfA, dfB):
 
     # keeping per-speaker dataframes separate for now
     if speakers_flipped:
-        aligned_conv = (
-            flipped_combined  
-        )
+        aligned_conv = flipped_combined
     else:
-        aligned_conv = (
-            normal_combined  
-        )
+        aligned_conv = normal_combined
 
     flip_info = {
         "speakers_flipped": speakers_flipped,
@@ -484,7 +480,9 @@ def main():
         if aligned_conv is not None:
             processed_count += 1
             # print(f"{len(aligned_conv)} aligned words")
-            aligned_conv.to_csv(f"aligned_words/aligned_conv_{conv_num}.csv", index=False)
+            aligned_conv.to_csv(
+                f"aligned_words/aligned_conv_{conv_num}.csv", index=False
+            )
         else:
             print(f"Failed processing {conv_num}")
 
