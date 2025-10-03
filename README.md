@@ -97,10 +97,9 @@ python process_aligned.py
 
 ## Results
 
-- **1,155 conversations** successfully aligned
+- Aligned all 1,155 conversations from SWDA
 - **84 conversations** had speaker channels flipped (automatically corrected)
 - **~99.7% word coverage** on average (missing act_tags tracked in logs)
-- Output files sorted by conversation number
 
 ### Alignment Quality
 
@@ -124,7 +123,7 @@ See `logs.txt` for complete processing details.
 
 ## License
 
-See `LICENSE` file for details.
+See [LICENSE](./LICENSE) file for details.
 
 ## References
 
