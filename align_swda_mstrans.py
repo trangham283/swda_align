@@ -110,7 +110,7 @@ def normalize_word(word):
 # claude-generated
 def align_sequences(seq1, seq2):
     """
-    Align two sequences using difflib.SequenceMatcher with relaxed word matching
+    Align two sequences prioritizing longer consecutive match sequences
     seq1: list of words from SWDA
     seq2: list of words from transcript
     Returns: list of tuples (word1, word2, alignment_type)
@@ -119,39 +119,93 @@ def align_sequences(seq1, seq2):
     norm_seq1 = [normalize_word(w) for w in seq1]
     norm_seq2 = [normalize_word(w) for w in seq2]
 
-    # Use SequenceMatcher on normalized sequences
+    # Use SequenceMatcher to find matching blocks
     matcher = SequenceMatcher(None, norm_seq1, norm_seq2)
-    alignment = []
+    matching_blocks = matcher.get_matching_blocks()
 
-    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-        if tag == "equal":
-            # Match (use original words in output)
-            for k in range(i2 - i1):
-                alignment.append((seq1[i1 + k], seq2[j1 + k], "match"))
-        elif tag == "replace":
-            # Mismatch - align 1:1 where possible
-            len1, len2 = i2 - i1, j2 - j1
-            for k in range(max(len1, len2)):
-                word1 = seq1[i1 + k] if k < len1 else None
-                word2 = seq2[j1 + k] if k < len2 else None
-                if word1 and word2:
-                    # Check if normalized versions match
-                    if normalize_word(word1) == normalize_word(word2):
-                        alignment.append((word1, word2, "match"))
-                    else:
-                        alignment.append((word1, word2, "mismatch"))
-                elif word1:
-                    alignment.append((word1, None, "deletion"))
+    # Build alignment prioritizing longer matching sequences
+    alignment = []
+    i1 = 0  # position in seq1
+    i2 = 0  # position in seq2
+
+    for block_idx, (match_i, match_j, match_len) in enumerate(matching_blocks):
+        # Skip the dummy terminating block
+        if match_len == 0:
+            continue
+
+        # Handle gap before this matching block
+        gap1_len = match_i - i1  # unmatched words in seq1
+        gap2_len = match_j - i2  # unmatched words in seq2
+
+        # Look ahead: check if skipping a short match leads to a longer match
+        if match_len == 1 and block_idx + 1 < len(matching_blocks):
+            next_match_i, next_match_j, next_match_len = matching_blocks[block_idx + 1]
+            if next_match_len > 1:
+                # Check if treating current match as gap allows better alignment
+                # If the gap would align better with the next match, skip current match
+                words_until_next_seq1 = next_match_i - i1
+                words_until_next_seq2 = next_match_j - i2
+
+                # If sequences are similar length and next match is substantial, prefer it
+                if abs(words_until_next_seq1 - words_until_next_seq2) <= 2:
+                    # Treat this single match as part of the gap
+                    gap1_len = next_match_i - i1
+                    gap2_len = next_match_j - i2
+                    # Add the gap alignment
+                    for k in range(max(gap1_len, gap2_len)):
+                        word1 = seq1[i1 + k] if k < gap1_len else None
+                        word2 = seq2[i2 + k] if k < gap2_len else None
+                        if word1 and word2:
+                            if normalize_word(word1) == normalize_word(word2):
+                                alignment.append((word1, word2, "match"))
+                            else:
+                                alignment.append((word1, word2, "mismatch"))
+                        elif word1:
+                            alignment.append((word1, None, "deletion"))
+                        else:
+                            alignment.append((None, word2, "insertion"))
+                    i1 = next_match_i
+                    i2 = next_match_j
+                    # Skip to next match
+                    continue
+
+        # Process gap with standard alignment
+        for k in range(max(gap1_len, gap2_len)):
+            word1 = seq1[i1 + k] if k < gap1_len else None
+            word2 = seq2[i2 + k] if k < gap2_len else None
+            if word1 and word2:
+                if normalize_word(word1) == normalize_word(word2):
+                    alignment.append((word1, word2, "match"))
                 else:
-                    alignment.append((None, word2, "insertion"))
-        elif tag == "delete":
-            # Deletion
-            for k in range(i1, i2):
-                alignment.append((seq1[k], None, "deletion"))
-        elif tag == "insert":
-            # Insertion
-            for k in range(j1, j2):
-                alignment.append((None, seq2[k], "insertion"))
+                    alignment.append((word1, word2, "mismatch"))
+            elif word1:
+                alignment.append((word1, None, "deletion"))
+            else:
+                alignment.append((None, word2, "insertion"))
+
+        # Add the matching block
+        for k in range(match_len):
+            alignment.append((seq1[match_i + k], seq2[match_j + k], "match"))
+
+        # Update positions
+        i1 = match_i + match_len
+        i2 = match_j + match_len
+
+    # Handle remaining words after last match
+    gap1_len = len(seq1) - i1
+    gap2_len = len(seq2) - i2
+    for k in range(max(gap1_len, gap2_len)):
+        word1 = seq1[i1 + k] if k < gap1_len else None
+        word2 = seq2[i2 + k] if k < gap2_len else None
+        if word1 and word2:
+            if normalize_word(word1) == normalize_word(word2):
+                alignment.append((word1, word2, "match"))
+            else:
+                alignment.append((word1, word2, "mismatch"))
+        elif word1:
+            alignment.append((word1, None, "deletion"))
+        else:
+            alignment.append((None, word2, "insertion"))
 
     return alignment
 
@@ -339,18 +393,15 @@ def align_with_speaker_detection(swda_df, dfA, dfB):
     # Use flipped if normal is poor and flipped is better
     speakers_flipped = normal_is_poor and not flipped_is_poor
 
+    # keeping per-speaker dataframes separate for now
     if speakers_flipped:
         aligned_conv = (
-            flipped_combined  # .sort_values(["start", "utterance_index"]).reset_index(
+            flipped_combined  
         )
-        #    drop=True
-        # )
     else:
         aligned_conv = (
-            normal_combined  # .sort_values(["start", "utterance_index"]).reset_index(
+            normal_combined  
         )
-        #    drop=True
-        # )
 
     flip_info = {
         "speakers_flipped": speakers_flipped,
@@ -421,6 +472,9 @@ def main():
     processed_count = 0
     flip_count = 0
 
+    # Create output directory
+    os.makedirs("aligned_words", exist_ok=True)
+
     print(f"\nProcessing conversations with speaker flip detection...")
     for conv_num in trans_convs:
         if conv_num not in conv2csv:
@@ -430,7 +484,7 @@ def main():
         if aligned_conv is not None:
             processed_count += 1
             # print(f"{len(aligned_conv)} aligned words")
-            aligned_conv.to_csv(f"aligned/aligned_conv_{conv_num}.csv", index=False)
+            aligned_conv.to_csv(f"aligned_words/aligned_conv_{conv_num}.csv", index=False)
         else:
             print(f"Failed processing {conv_num}")
 
