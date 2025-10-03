@@ -92,8 +92,8 @@ python process_aligned.py
 
 ### Processing Time
 
-- Word-level alignment: ~4 minutes on Intel Core Ultra 7 155U
-- Turn-level aggregation: varies by conversation size
+- Word-level alignment: ~5 minutes on Intel Core Ultra 7 155U
+- Turn-level aggregation: ~3 minutes on Intel Core Ultra 7 155U
 
 ## Results
 
