@@ -93,10 +93,6 @@ Successfully processed 1155 conversations
 
 ==================================================
 
-Total processing time: ~4 minutes on a CPU Intel(R) Core(TM) Ultra 7 155U; Ubuntu 24.04.3 LTS
-
-==================================================
-
 Processing 1155 files...
   2005: unable to fill act_tag for 2/1731 words
   2006: unable to fill act_tag for 2/1462 words
@@ -858,5 +854,4 @@ Files with most unfilled act_tag values:
   8. 2965: 28 unfilled out of 1549 words (1.8%)
   9. 2433: 27 unfilled out of 2271 words (1.2%)
   10. 2372: 26 unfilled out of 1877 words (1.4%)
-
 
