@@ -4,6 +4,7 @@ swb_ms98_transcriptions*
 switchboard_word_alignments*
 aligned_words/*
 aligned_turns/*
+coarse_tags/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
