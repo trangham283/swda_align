@@ -111,6 +111,7 @@ python convert_to_coarse_tags.py
 
 - Word-level alignment: ~5 minutes on Intel Core Ultra 7 155U
 - Turn-level aggregation: ~3 minutes on Intel Core Ultra 7 155U
+- Coarse tag conversion: ~1 minute on Intel Core Ulttra 7 155U
 
 ## Results
 
