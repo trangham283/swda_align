@@ -68,6 +68,20 @@ Post-processes word-level alignments to create turn-level utterances:
 - `transcript_ms`: Full utterance text from MS-State
 - `act_tag`: Dialog act tag (simplified DAMSL tags)
 
+### 3. Coarse Tag Conversion (`convert_to_coarse_tags.py`)
+
+Converts fine-grained dialog act tags into 4 coarse categories for simplified analysis/question-answer pair turn extractions:
+- Handles continuation markers: when `act_tag` is "+", replaces it with the previous turn's tag from the same speaker
+- Maps fine-grained tags to coarse categories:
+  - **question**: tags starting with "q" (e.g., qy, qw, qh)
+  - **statement**: tags starting with "s" (e.g., sd, sv, sv^d)
+  - **answer**: tags starting with "a", "n", or "b" (e.g., aa, ny, bh)
+  - **other**: all remaining tags (e.g., h, fp, x)
+- Outputs coarse-tagged data to `coarse_tags/`
+
+**Output:** `coarse_tags/aligned_turns_{conv_num}.csv` containing all columns from turn-level files plus:
+- `act_tag_merge`: Coarse dialog act category (question, answer, statement, other)
+
 ## Usage
 
 ### Setup
@@ -88,6 +102,9 @@ python align_swda_mstrans.py
 
 # Step 2: Turn-level aggregation
 python process_aligned.py
+
+# Step 3: Convert to coarse tags (optional)
+python convert_to_coarse_tags.py
 ```
 
 ### Processing Time
@@ -114,12 +131,14 @@ See `logs.txt` for complete processing details.
 
 - `align_swda_mstrans.py`: Main word-level alignment script
 - `process_aligned.py`: Turn-level aggregation script
+- `convert_to_coarse_tags.py`: Coarse tag conversion script
 - `compare_alignment.py`: Comparison of alignment algorithms (difflib's Ratcliff-Obershelp algorithm vs. Needleman–Wunsch algorithm)
 - `download.sh`: Setup script for SWDA data
 - `flipped_channels.txt`: List of conversations with flipped speaker channels
 - `logs.txt`: Processing logs and statistics
 - `aligned_words/`: Word-level alignment outputs (1,155 files)
 - `aligned_turns/`: Turn-level aggregated outputs (1,155 files)
+- `coarse_tags/`: Coarse-tagged turn-level outputs (1,155 files)
 
 ## License
 
